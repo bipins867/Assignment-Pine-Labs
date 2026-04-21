@@ -52,6 +52,18 @@ register_exception_handlers(app)
 app.include_router(v1_router)
 
 
+@app.get("/", tags=["System"])
+async def root():
+    """Root endpoint providing service information."""
+    return {
+        "service": "Payment Reconciliation API",
+        "status": "online",
+        "documentation": "/docs",
+        "health_check": "/api/v1/health",
+        "version": "1.0.0"
+    }
+
+
 @app.on_event("startup")
 async def startup_event():
     logger.info(f"Starting Payment Reconciliation Service ({settings.APP_ENV})")
