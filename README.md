@@ -225,31 +225,34 @@ docker-compose up -d --build
 This will:
 - Start MySQL 8.0 with both `payment_db` and `payment_test_db`
 - Run Alembic migrations automatically
-- Start the FastAPI server on port 8000
+- Start the FastAPI server (mapped to port 5005 externally)
 
 ### 2. Verify
 
 ```bash
-curl http://localhost:8000/api/v1/health
+curl http://localhost:5005/api/v1/health
 ```
 
 ### 3. Explore
 
-- **Swagger UI:** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
+- **Swagger UI:** http://localhost:5005/docs
+- **ReDoc:** http://localhost:5005/redoc
 - **Adminer (DB UI):** http://localhost:8080
 
 ### 4. Seed Sample Data
 
+If you have the `sample_events.json` file provided in the assignment, you can load it directly into your database:
+
 ```bash
-# Generate and load 10,000+ events via API
+# Load events from the provided JSON file
+python scripts/load_json.py sample_events.json
+```
+
+Alternatively, if you want to generate entirely new realistic mock data (10,000+ events):
+
+```bash
+# Generate and load new events via API
 docker-compose exec app python -m scripts.seed_data --mode api
-
-# Or export to JSON file
-docker-compose exec app python -m scripts.seed_data --mode json
-
-# Or both
-docker-compose exec app python -m scripts.seed_data --mode both
 ```
 
 ### Migration Commands
@@ -391,4 +394,4 @@ Import `postman_collection.json` into Postman. The collection includes:
 - Edge cases (duplicates, 404, validation errors)
 - Reconciliation with different groupings and thresholds
 
-Set the `base_url` variable to your server address (default: `http://localhost:8000`).
+Set the `base_url` variable to your server address (e.g., `https://jarviss.online` or `http://localhost:5005`).
