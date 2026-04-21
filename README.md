@@ -1,5 +1,8 @@
 # Payment Event Ingestion & Reconciliation Service
 
+> 🚀 **Live Demo:** The production server is successfully deployed and live at [https://jarviss.online/](https://jarviss.online/). 
+> Interactive API Documentation (Swagger UI) is available at [https://jarviss.online/docs](https://jarviss.online/docs).
+
 A production-minded backend service for payment event ingestion and reconciliation, built with **FastAPI**, **MySQL**, **SQLAlchemy ORM**, and **Alembic** migrations.
 
 ## Table of Contents
@@ -233,8 +236,14 @@ This will:
 curl http://localhost:5005/api/v1/health
 ```
 
-### 3. Explore
+### 3. Explore (Live & Local)
 
+**Production (Live Demo):**
+- **Root URL:** https://jarviss.online/
+- **Swagger UI:** https://jarviss.online/docs
+- **Health Check:** https://jarviss.online/api/v1/health
+
+**Local Development:**
 - **Swagger UI:** http://localhost:5005/docs
 - **ReDoc:** http://localhost:5005/redoc
 - **Adminer (DB UI):** http://localhost:8080
