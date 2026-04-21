@@ -5,18 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    environment:
-      # Use host.docker.internal to connect to the MySQL running on your local machine
-      - APP_ENV=development
-      - MYSQL_HOST=host.docker.internal
-      - MYSQL_PORT=3306
-      - MYSQL_USER=${MYSQL_USER:-payment_user}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-payment_pass_2026}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-payment_db}
-      - MYSQL_TEST_DATABASE=${MYSQL_TEST_DATABASE:-payment_test_db}
-      - CORS_ORIGINS=*
-      - DEFAULT_STALE_AFTER_HOURS=24
-      - LOG_LEVEL=info
+    env_file:
+      - .env
     volumes:
       - .:/app
     extra_hosts:
