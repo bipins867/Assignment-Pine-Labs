@@ -5,11 +5,11 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-payment_db}
-      MYSQL_USER: ${MYSQL_USER:-payment_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-payment_pass_2026}
+      # Hardcoded to avoid conflicts with your server's .env root user
+      MYSQL_DATABASE: payment_db
+      MYSQL_USER: payment_user
+      MYSQL_PASSWORD: payment_pass_2026
     ports:
-      # Expose on 3307 externally to avoid conflicting with your host MySQL
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
@@ -31,8 +31,11 @@ services:
     env_file:
       - .env
     environment:
-      # This forces the app to look for the 'db' container, overriding whatever is in your .env
+      # Hardcoded to force connection to the Docker DB, ignoring .env
       - MYSQL_HOST=db
+      - MYSQL_USER=payment_user
+      - MYSQL_PASSWORD=payment_pass_2026
+      - MYSQL_DATABASE=payment_db
     volumes:
       - .:/app
     depends_on:
