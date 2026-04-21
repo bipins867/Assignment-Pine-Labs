@@ -1,0 +1,220 @@
+{
+  "info": {
+    "name": "Payment Reconciliation Service",
+    "description": "Complete API collection for the Payment Event Ingestion & Reconciliation Service.\n\nCovers all 5 endpoints with example requests for normal flows, edge cases, and error scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Ingest Event — payment_initiated",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_demo_001\",\n  \"event_type\": \"payment_initiated\",\n  \"transaction_id\": \"txn_demo_001\",\n  \"merchant_id\": \"merchant_A\",\n  \"merchant_name\": \"Acme Electronics\",\n  \"amount\": 1500.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T10:30:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ingest Event — payment_processed",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_demo_002\",\n  \"event_type\": \"payment_processed\",\n  \"transaction_id\": \"txn_demo_001\",\n  \"merchant_id\": \"merchant_A\",\n  \"merchant_name\": \"Acme Electronics\",\n  \"amount\": 1500.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T11:00:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ingest Event — settled",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_demo_003\",\n  \"event_type\": \"settled\",\n  \"transaction_id\": \"txn_demo_001\",\n  \"merchant_id\": \"merchant_A\",\n  \"merchant_name\": \"Acme Electronics\",\n  \"amount\": 1500.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T12:00:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ingest Event — Duplicate (Idempotency Test)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_demo_001\",\n  \"event_type\": \"payment_initiated\",\n  \"transaction_id\": \"txn_demo_001\",\n  \"merchant_id\": \"merchant_A\",\n  \"merchant_name\": \"Acme Electronics\",\n  \"amount\": 1500.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T10:30:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ingest Event — payment_failed",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_demo_010\",\n  \"event_type\": \"payment_initiated\",\n  \"transaction_id\": \"txn_demo_002\",\n  \"merchant_id\": \"merchant_B\",\n  \"merchant_name\": \"Global Payments Corp\",\n  \"amount\": 750.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T14:00:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ingest Event — Invalid Payload (422)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"x\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List All Transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions"
+          }
+        },
+        {
+          "name": "List — Filter by Merchant",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions?merchant_id=merchant_A"
+          }
+        },
+        {
+          "name": "List — Filter by Payment Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions?payment_status=processed"
+          }
+        },
+        {
+          "name": "List — Filter by Date Range",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions?date_from=2026-04-01T00:00:00Z&date_to=2026-04-30T23:59:59Z"
+          }
+        },
+        {
+          "name": "List — Paginated (Page 1, Size 10)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions?page=1&page_size=10&sort_by=created_at&sort_order=desc"
+          }
+        },
+        {
+          "name": "Get Transaction Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions/txn_demo_001"
+          }
+        },
+        {
+          "name": "Get Transaction — Not Found (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/transactions/nonexistent_txn"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reconciliation",
+      "item": [
+        {
+          "name": "Summary — Group by Merchant",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/summary?group_by=merchant"
+          }
+        },
+        {
+          "name": "Summary — Group by Date",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/summary?group_by=date"
+          }
+        },
+        {
+          "name": "Summary — Group by Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/summary?group_by=status"
+          }
+        },
+        {
+          "name": "Summary — Filtered by Merchant",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/summary?group_by=merchant&merchant_id=merchant_A"
+          }
+        },
+        {
+          "name": "Discrepancies — Default Threshold",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/discrepancies"
+          }
+        },
+        {
+          "name": "Discrepancies — Custom Threshold (1h)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/discrepancies?stale_after_hours=1"
+          }
+        },
+        {
+          "name": "Discrepancies — Filter by Type",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/discrepancies?discrepancy_type=unsettled_processed"
+          }
+        },
+        {
+          "name": "Discrepancies — Filter by Merchant",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reconciliation/discrepancies?merchant_id=merchant_A"
+          }
+        }
+      ]
+    }
+  ]
+}
