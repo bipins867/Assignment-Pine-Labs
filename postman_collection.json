@@ -1,13 +1,13 @@
 {
   "info": {
     "name": "Payment Reconciliation Service",
-    "description": "Complete API collection for the Payment Event Ingestion & Reconciliation Service.\n\nCovers all 5 endpoints with example requests for normal flows, edge cases, and error scenarios.",
+    "description": "Complete API collection for the Payment Event Ingestion & Reconciliation Service.\n\n**Quick Start:** All requests use the `base_url` variable, which defaults to the live production server. To test locally, change `base_url` to `http://localhost:5005`.\n\n**Recommended Sequence:**\n1. Health Check\n2. Ingest lifecycle events (initiated → processed → settled)\n3. Test idempotency (duplicate request)\n4. List and inspect transactions\n5. Run reconciliation summary and discrepancies",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8000",
+      "value": "https://jarviss.online",
       "type": "string"
     }
   ],
@@ -76,7 +76,7 @@
           }
         },
         {
-          "name": "Ingest Event — payment_failed",
+          "name": "Ingest Event — payment_initiated (Merchant B)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/api/v1/events",
@@ -84,6 +84,18 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"event_id\": \"evt_demo_010\",\n  \"event_type\": \"payment_initiated\",\n  \"transaction_id\": \"txn_demo_002\",\n  \"merchant_id\": \"merchant_B\",\n  \"merchant_name\": \"Global Payments Corp\",\n  \"amount\": 750.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T14:00:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ingest Event — payment_failed (Merchant B)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/v1/events",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_demo_011\",\n  \"event_type\": \"payment_failed\",\n  \"transaction_id\": \"txn_demo_002\",\n  \"merchant_id\": \"merchant_B\",\n  \"merchant_name\": \"Global Payments Corp\",\n  \"amount\": 750.00,\n  \"currency\": \"INR\",\n  \"timestamp\": \"2026-04-20T14:30:00Z\"\n}"
             }
           }
         },

@@ -19,6 +19,8 @@ A production-minded backend service for payment event ingestion and reconciliati
 - [Running Tests](#running-tests)
 - [Deployment](#deployment)
 - [Assumptions & Tradeoffs](#assumptions--tradeoffs)
+- [AI Tools & Disclosure](#ai-tools--disclosure)
+- [Postman Collection](#postman-collection)
 
 ---
 
@@ -108,15 +110,15 @@ The **dual-status model** (`payment_status` + `settlement_status`) on `transacti
 ## Idempotency Strategy
 
 1. Every event has a unique `event_id`
-2. On `POST /events`, we first check if `event_id` exists in `payment_events`
-3. If **duplicate**: return `200` with `is_duplicate: true` — no state change
-4. If **new**: persist event, apply state transition, return `201`
-5. Events are **always persisted** in `payment_events` regardless of whether they trigger a state change — the audit log is append-only
+2. On `POST /events`, we first check if `event_id` already exists in `payment_events`
+3. If **duplicate `event_id`**: return `200` with `is_duplicate: true` — no re-insertion, no state change
+4. If **new `event_id`**: persist event in the audit log, apply state transition, return `201`
+5. For new events that don't match a valid state transition (e.g., out-of-order arrival), the event is still **persisted for audit** but the transaction state remains unchanged
 
 This ensures:
-- Safe retries (same event_id → same response)
-- No data corruption from duplicates
-- Complete audit trail
+- **Safe retries** — submitting the same `event_id` twice is harmless and returns the current state
+- **No data corruption** — duplicates are detected before insertion, not via insert-and-ignore
+- **Complete audit trail** — every *unique* event is preserved, including out-of-order events that didn't trigger a transition
 
 ---
 
@@ -206,7 +208,7 @@ Detect reconciliation discrepancies.
 ### `GET /api/v1/health`
 Health check with database connectivity status.
 
-**Interactive docs:** `http://localhost:8000/docs` (Swagger UI) or `http://localhost:8000/redoc`
+**Interactive docs (local):** `http://localhost:5005/docs` (Swagger UI) or `http://localhost:5005/redoc`
 
 ---
 
@@ -218,10 +220,10 @@ Health check with database connectivity status.
 ### 1. Clone and Start
 
 ```bash
-git clone <repository-url>
-cd payment-reconciliation-service
+git clone https://github.com/bipins867/Assignment-Pine-Labs.git
+cd Assignment-Pine-Labs
 
-# Start all services (MySQL + App + Adminer)
+# Start all services (MySQL + App)
 docker-compose up -d --build
 ```
 
@@ -254,7 +256,9 @@ If you have the `sample_events.json` file provided in the assignment, you can lo
 
 ```bash
 # Load events from the provided JSON file
-python scripts/load_json.py sample_events.json
+# Note: The script defaults to http://localhost:8000 (internal container port).
+# If running from outside Docker, specify the mapped port:
+python scripts/load_json.py sample_events.json http://localhost:5005
 ```
 
 Alternatively, if you want to generate entirely new realistic mock data (10,000+ events):
@@ -336,7 +340,27 @@ docker-compose exec app pytest tests/ -v --tb=short
 
 ## Deployment
 
-### Docker (Recommended)
+### Live Production Instance
+
+The production server is deployed and pre-loaded with **10,000+ sample events** across 5 merchants. You can verify immediately:
+
+```bash
+# Health check
+curl https://jarviss.online/api/v1/health
+
+# View transactions (pre-loaded data)
+curl "https://jarviss.online/api/v1/transactions?page=1&page_size=5"
+
+# Reconciliation summary
+curl "https://jarviss.online/api/v1/reconciliation/summary?group_by=merchant"
+
+# Detect discrepancies
+curl "https://jarviss.online/api/v1/reconciliation/discrepancies?stale_after_hours=1"
+```
+
+Or explore interactively via **Swagger UI**: [https://jarviss.online/docs](https://jarviss.online/docs)
+
+### Docker (Local Setup)
 
 The app is deployment-ready with Docker. For cloud platforms:
 
@@ -351,6 +375,16 @@ The app is deployment-ready with Docker. For cloud platforms:
 2. Push to container registry
 3. Deploy with environment variables configured
 4. Ensure MySQL instance is accessible
+
+### Port Mapping
+
+The FastAPI app runs on port **8000** inside the container. Docker Compose maps this to port **5005** on the host:
+
+```
+Container (internal): 8000  →  Host (external): 5005
+```
+
+All local URLs in this README use `localhost:5005` (the external-facing port).
 
 ### Environment Variables
 
@@ -378,7 +412,7 @@ See `.env.example` for all configuration keys. Key variables:
 
 ### Tradeoffs
 1. **Dual-status model vs. event replay**: We maintain `payment_status` and `settlement_status` on the transaction for O(1) reads and efficient SQL aggregation, rather than replaying events on every query. This trades storage for read performance.
-2. **In-memory pagination for discrepancies**: Discrepancy results are paginated in Python after SQL queries. For very large datasets, this could be moved to a UNION ALL SQL approach.
+2. **Discrepancy pagination**: Discrepancy detection runs via individual SQL queries per rule, with final deduplication and pagination in Python. This is a deliberate scope tradeoff — the typical discrepancy count is small enough that in-memory pagination is efficient. For very large datasets, a `UNION ALL` SQL approach could replace this.
 3. **Synchronous processing**: Events are processed synchronously. For high-throughput production, a message queue (RabbitMQ/Kafka) would decouple ingestion from processing.
 4. **No authentication**: Omitted for assignment scope. Production would add JWT/API key auth.
 
@@ -395,12 +429,18 @@ See `.env.example` for all configuration keys. Key variables:
 
 ---
 
+## AI Tools & Disclosure
+
+This project was developed with assistance from AI coding tools (GitHub Copilot, Claude) for accelerating boilerplate generation, documentation drafting, and code review suggestions. All implementation decisions, architecture design, business logic, testing, and final review were performed and validated manually by me.
+
+---
+
 ## Postman Collection
 
 Import `postman_collection.json` into Postman. The collection includes:
-- All 5 API endpoints
-- Normal flow examples
+- All API endpoints with clearly named requests
+- Full lifecycle flow (initiate → process → settle)
 - Edge cases (duplicates, 404, validation errors)
 - Reconciliation with different groupings and thresholds
 
-Set the `base_url` variable to your server address (e.g., `https://jarviss.online` or `http://localhost:5005`).
+The default `base_url` is set to the **production server** (`https://jarviss.online`) so you can test immediately. To test locally, change the variable to `http://localhost:5005`.
