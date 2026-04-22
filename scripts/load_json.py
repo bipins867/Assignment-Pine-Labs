@@ -55,10 +55,11 @@ def load_events(filepath: str, base_url: str = "http://localhost:8000"):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Error: Please provide the path to your sample_events.json file.")
-        print("Usage: python scripts/load_json.py path/to/sample_events.json")
+        print("Usage: python scripts/load_json.py path/to/sample_events.json [base_url]")
         sys.exit(1)
         
     filepath = sys.argv[1]
+    base_url = sys.argv[2] if len(sys.argv) > 2 else "http://localhost:8000"
     
     # Check if requests is installed, install if missing just to be helpful
     try:
@@ -69,4 +70,4 @@ if __name__ == "__main__":
         subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
         import requests
         
-    load_events(filepath)
+    load_events(filepath, base_url)
